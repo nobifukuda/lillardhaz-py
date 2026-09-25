@@ -1,0 +1,16 @@
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Bytecode caches
+__pycache__/
+*.pyc
+
+# Test/tool caches
+.pytest_cache/
+
+# Editors, OS
+.DS_Store
+.vscode/
+.idea/
