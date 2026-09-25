@@ -1,3 +1,25 @@
+Metadata-Version: 2.4
+Name: lillardhaz
+Version: 0.1.0
+Summary: Simultaneous-equations hazard/probit models with a Gaussian-copula correlation (Lillard 1993)
+Author-email: Nobutaka Fukuda <nobutaka.fukuda@tohoku.ac.jp>
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/nobifukuda/lillardhaz-py
+Project-URL: Repository, https://github.com/nobifukuda/lillardhaz-py
+Keywords: survival-analysis,hazard-model,duration-analysis,copula,simultaneous-equations,probit
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.22
+Requires-Dist: scipy>=1.8
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Dynamic: license-file
+
 # lillardhaz (Python)
 
 A Python package for **simultaneous-equations hazard/probit models with a

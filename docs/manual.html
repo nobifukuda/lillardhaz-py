@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>lillardhaz manual</title>
+<style>
+  :root{
+    --bg:#fbfaf7; --panel:#ffffff; --ink:#1d1d1f; --sub:#55565c;
+    --accent:#8a3324; --accent2:#2c5f6f; --line:#e4e1d8; --code-bg:#f3f1ea;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16151a; --panel:#1d1c22; --ink:#eceae5; --sub:#a9a7ab;
+      --accent:#e08a6f; --accent2:#8fc6d6; --line:#333139; --code-bg:#26242c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16151a; --panel:#1d1c22; --ink:#eceae5; --sub:#a9a7ab;
+    --accent:#e08a6f; --accent2:#8fc6d6; --line:#333139; --code-bg:#26242c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink); margin:0;
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    line-height:1.62; font-size:17px;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:48px 20px 100px;}
+  header.hero{
+    padding:56px 20px 40px; text-align:center; border-bottom:1px solid var(--line);
+    margin-bottom:44px;
+  }
+  header.hero h1{
+    font-size:2.6rem; margin:0 0 10px; letter-spacing:-0.01em; color:var(--ink);
+  }
+  header.hero p{color:var(--sub); font-size:1.08rem; max-width:560px; margin:0 auto;}
+  .badges{margin-top:20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .badge{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:0.78rem; padding:5px 12px; border-radius:999px;
+    background:var(--code-bg); color:var(--sub); border:1px solid var(--line);
+  }
+  h2{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:1.5rem; margin-top:3em; padding-bottom:10px; border-bottom:2px solid var(--accent);
+    display:inline-block;
+  }
+  h3{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:1.15rem; color:var(--accent2); margin-top:2.2em;
+  }
+  p{color:var(--ink);}
+  .sub{color:var(--sub);}
+  code, .formula{
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-size:0.92em;
+    background:var(--code-bg); border-radius:5px; padding:1px 6px;
+  }
+  pre{
+    background:var(--code-bg); border:1px solid var(--line); border-radius:10px;
+    padding:16px 18px; overflow-x:auto; font-size:0.88rem; line-height:1.5;
+  }
+  pre code{background:none; padding:0;}
+  .formula-block{
+    background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:8px; padding:14px 18px; margin:16px 0; font-family:"SF Mono",Menlo,monospace;
+    font-size:0.92rem; overflow-x:auto;
+  }
+  table{border-collapse:collapse; width:100%; margin:18px 0; font-size:0.92rem;}
+  th,td{border:1px solid var(--line); padding:8px 12px; text-align:left;}
+  th{background:var(--code-bg); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:20px 24px; margin:18px 0;
+  }
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:640px){.grid2{grid-template-columns:1fr;}}
+  footer{
+    margin-top:70px; padding-top:24px; border-top:1px solid var(--line);
+    color:var(--sub); font-size:0.9rem; text-align:center;
+  }
+  a{color:var(--accent2);}
+  .toc{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:0.92rem;
+  }
+  .toc a{display:block; padding:4px 0; color:var(--ink); text-decoration:none;}
+  .toc a:hover{color:var(--accent);}
+  .note{
+    border-left:4px solid var(--accent2); background:var(--panel); border-radius:6px;
+    padding:12px 16px; margin:16px 0; font-size:0.95rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>lillardhaz</h1>
+  <p>Simultaneous-equations hazard/probit models with a Gaussian-copula correlation, after Lillard (1993).</p>
+  <div class="badges">
+    <span class="badge">Python &ge; 3.9</span>
+    <span class="badge">numpy + scipy</span>
+    <span class="badge">MIT License</span>
+    <span class="badge">v0.1.0</span>
+  </div>
+</header>
+
+<div class="panel toc">
+  <a href="#overview">1. Overview</a>
+  <a href="#model">2. The model</a>
+  <a href="#pgompertz">3. Piecewise Gompertz timing</a>
+  <a href="#likelihood">4. The joint likelihood, case by case</a>
+  <a href="#identification">5. Independence and the corr=False reduction</a>
+  <a href="#correction">6. A correction relative to the original templates</a>
+  <a href="#verification">7. Verification</a>
+  <a href="#reference">8. Function reference</a>
+  <a href="#examples">9. Examples</a>
+  <a href="#author">10. Author &amp; references</a>
+</div>
+
+<section id="overview">
+<h2>1. Overview</h2>
+<p>
+<code>lillardhaz</code> fits a two-equation simultaneous model of the kind introduced by
+Lillard (1993): a pair of processes, each either a binary probit outcome or a continuous-time
+hazard duration, linked through a single correlation parameter <em>rho</em> between their
+underlying error terms and estimated jointly by maximum likelihood via a Gaussian copula.
+</p>
+<p>
+Four families of model are supported, selected by the <code>eq1</code>/<code>eq2</code> arguments
+of <code>fit_lillardhaz()</code>:
+</p>
+<table>
+<tr><th>eq1</th><th>eq2</th><th>Typical use</th></tr>
+<tr><td>probit</td><td>lognormal</td><td>a binary decision correlated with a log-normal AFT duration (e.g. Waite &amp; Lillard 1991)</td></tr>
+<tr><td>lognormal</td><td>lognormal</td><td>two correlated log-normal AFT durations</td></tr>
+<tr><td>probit</td><td>pgompertz</td><td>a binary decision correlated with a flexible piecewise-Gompertz duration</td></tr>
+<tr><td>pgompertz</td><td>pgompertz</td><td>two correlated piecewise-Gompertz durations</td></tr>
+</table>
+<p>
+Every combination can also be fit with <code>corr=False</code>, which restricts <em>rho</em>=0
+and &mdash; as shown in <a href="#identification">Section 5</a> &mdash; reduces algebraically to
+two independent univariate fits, giving a natural nested baseline for a likelihood-ratio test of
+correlation.
+</p>
+<p>
+Companion packages implementing the identical models: a
+<a href="https://github.com/nobifukuda/lillardhaz-stata">Stata command</a> and an
+<a href="https://github.com/nobifukuda/lillardhaz">R package</a>, along with a from-scratch
+Python/R/Stata toolkit for the underlying (univariate) split-population survival models at
+<a href="https://github.com/nobifukuda/splitpopsurv">github.com/nobifukuda/splitpopsurv</a>.
+</p>
+</section>
+
+<section id="model">
+<h2>2. The model</h2>
+<p>
+Each equation has a location index built from covariates, <em>theta</em> = X<em>b</em>. For a
+probit equation, Y=1 iff <em>theta</em> + <em>u</em> &gt; 0 with <em>u</em> ~ N(0,1); the latent
+index <em>theta</em> is itself standard-normal-scaled and so is already a copula residual. For a
+hazard equation, timing follows either:
+</p>
+<ul>
+<li><strong>log-normal</strong>: log(T) = <em>theta</em> + <em>sigma</em>&middot;<em>e</em>,
+    <em>e</em> ~ N(0,1) &mdash; the standard accelerated failure-time form; or</li>
+<li><strong>piecewise Gompertz</strong>: log h(t) piecewise linear in t (Section 3).</li>
+</ul>
+<p>
+For any hazard equation, define the copula residual via the probability integral transform:
+</p>
+<div class="formula-block">z = Phi<sup>-1</sup>( 1 - S(t) )</div>
+<p>
+which is exactly standard normal under the fitted model, by construction, regardless of which
+timing distribution generated S(t). This is what lets a log-normal equation be paired with a
+piecewise-Gompertz equation under the same copula machinery.
+</p>
+</section>
+
+<section id="pgompertz">
+<h2>3. Piecewise Gompertz timing</h2>
+<p>
+The piecewise Gompertz hazard (Lillard 1993, following his footnote 6) makes the log-hazard a
+continuous, piecewise-linear function of time. Given <em>K</em>-1 interior nodes
+0 &lt; n<sub>1</sub> &lt; ... &lt; n<sub>K-1</sub> (set by <code>nodes1</code>/<code>nodes2</code>,
+defining <em>K</em> segments) and per-segment slopes s<sub>1</sub>,...,s<sub>K</sub>:
+</p>
+<div class="formula-block">
+log h(t) = theta + L<sub>k</sub> + s<sub>k</sub>&middot;(t - n<sub>k-1</sub>) &nbsp; for t in segment k
+</div>
+<p>
+where L<sub>k</sub> is built recursively (L<sub>1</sub>=0, L<sub>k+1</sub> = L<sub>k</sub> +
+s<sub>k</sub>&middot;(n<sub>k</sub>-n<sub>k-1</sub>)) so the log-hazard has no jumps at the
+nodes. Because each segment's hazard is exp(linear), the cumulative hazard has a closed form on
+each segment (integrate exp(a+bx) analytically, with a linear-in-t fallback when a segment's
+slope is numerically zero), so S(t) = exp(-H(t)) and f(t) = h(t)S(t) require no numerical
+integration at any stage. This is implemented once, for a general number of segments, as
+<code>_pgompertz_sf()</code> in <code>models.py</code> and shared by both equations &mdash; a
+direct vectorized (numpy) port of the same recursion used in the R and Stata companion packages.
+</p>
+<div class="note">
+A piecewise Gompertz segment with a <em>negative</em> slope has a hazard that decays toward 0, so
+its cumulative hazard is <em>bounded</em> as t &rarr; &infin; within that segment &mdash; the
+model is then a genuinely defective distribution (S(&infin;) &gt; 0), the same way a Gompertz
+hazard with a negative shape parameter behaves in the univariate case. If you simulate data from
+such a model, a small fraction of draws may have no finite failure time reachable in floating
+point; treat those as always-censored (see <code>tests/test_models.py</code> for a worked
+example).
+</div>
+</section>
+
+<section id="likelihood">
+<h2>4. The joint likelihood, case by case</h2>
+<p>
+Write a = sqrt(1-rho<sup>2</sup>). When both equations are hazards, with residuals
+(z1,z2) and marginal density/survival (f1,S1,f2,S2):
+</p>
+<div class="grid2">
+<div class="panel">
+<h3>both observed</h3>
+<div class="formula-block">phi2(z1,z2;rho) / (phi(z1)phi(z2)) &middot; f1&middot;f2</div>
+</div>
+<div class="panel">
+<h3>1 observed, 2 censored</h3>
+<div class="formula-block">f1 &middot; ( 1 - Phi((z2-rho&middot;z1)/a) )</div>
+</div>
+<div class="panel">
+<h3>1 censored, 2 observed</h3>
+<div class="formula-block">f2 &middot; ( 1 - Phi((z1-rho&middot;z2)/a) )</div>
+</div>
+<div class="panel">
+<h3>both censored</h3>
+<div class="formula-block">Phi2(-z1,-z2;rho)</div>
+</div>
+</div>
+<p>
+When equation 1 is a probit (outcome y1, index theta1) and equation 2 is a hazard (residual z2,
+density/survival f2/S2):
+</p>
+<div class="grid2">
+<div class="panel">
+<h3>y1=1, obs 2 observed</h3>
+<div class="formula-block">f2 &middot; Phi((theta1+rho&middot;z2)/a)</div>
+</div>
+<div class="panel">
+<h3>y1=1, obs 2 censored</h3>
+<div class="formula-block">Phi(theta1) - Phi2(theta1,z2;-rho)</div>
+</div>
+<div class="panel">
+<h3>y1=0, obs 2 observed</h3>
+<div class="formula-block">f2 &middot; Phi(-(theta1+rho&middot;z2)/a)</div>
+</div>
+<div class="panel">
+<h3>y1=0, obs 2 censored</h3>
+<div class="formula-block">Phi2(-theta1,-z2;-rho)</div>
+</div>
+</div>
+<p class="sub">
+Phi2(&middot;,&middot;;rho) is the bivariate normal CDF, computed via
+<code>scipy.stats.multivariate_normal(...).cdf(...)</code> (cross-checked against the closed-form
+value Phi2(0,0;rho) = 1/4 + arcsin(rho)/(2*pi) to machine precision). The censored-cell formulas
+follow the inclusion-exclusion identity
+P(Z1&gt;z1,Z2&gt;z2) = 1-Phi(z1)-Phi(z2)+Phi2(z1,z2;rho) = Phi2(-z1,-z2;rho).
+</p>
+</section>
+
+<section id="identification">
+<h2>5. Independence and the corr=False reduction</h2>
+<p>
+Setting rho=0 gives a=1, and every formula above factors exactly into the product of the two
+marginal terms &mdash; e.g. the both-observed hazard&times;hazard cell becomes
+phi(z1)phi(z2)&middot;f1&middot;f2/(phi(z1)phi(z2)) = f1&middot;f2, and the both-censored cell
+becomes Phi(-z1)Phi(-z2) = S1&middot;S2. This is exactly Lillard's own identification
+result: with no correlation, the joint likelihood is the product of two independent univariate
+likelihoods. <code>fit_lillardhaz(..., corr=False)</code> fits this restricted model using the
+<em>same</em> likelihood function (with rho fixed at 0 and no <code>atanh_rho</code> parameter)
+rather than a separate code path.
+</p>
+</section>
+
+<section id="correction">
+<h2>6. A correction relative to the original templates</h2>
+<p>
+The widely-circulated <code>ml</code> templates this package's Stata/R/Python siblings all
+supersede generally build the joint bivariate density by inverting (1-rho<sup>2</sup>) into the
+wrong term of the exponent, or by mixing marginal <em>density</em> where a marginal
+<em>hazard</em> was intended (the same class of error documented for the univariate case in the
+companion <a href="https://github.com/nobifukuda/splitpopsurv">splitpopsurv</a> package). This
+package derives each of the eight branches in Section 4 directly from the bivariate normal
+density/CDF and the definition of the copula residual, and verifies every branch by simulation
+(Section 7) rather than by inspection alone.
+</p>
+</section>
+
+<section id="verification">
+<h2>7. Verification</h2>
+<p>
+Every eq1&times;eq2 combination, correlated and independent, was verified by simulating data
+under known parameters (the same data-generating processes as the R and Stata companion
+packages' test suites) and confirming <code>fit_lillardhaz()</code> recovers them; see
+<code>tests/test_models.py</code>, which runs under <code>pytest</code>. Results
+(n=20,000&ndash;25,000 per run):
+</p>
+<table>
+<tr><th>eq1 / eq2</th><th>corr</th><th>true rho</th><th>estimated rho</th><th>notes</th></tr>
+<tr><td>lognormal / lognormal</td><td>True</td><td>0.500</td><td>0.508</td><td>all regression coefficients within 2% of truth</td></tr>
+<tr><td>probit / lognormal</td><td>True</td><td>-0.400</td><td>-0.387</td><td></td></tr>
+<tr><td>pgompertz / pgompertz</td><td>True</td><td>0.350</td><td>0.345</td><td>2 nodes each side; all 8 location/slope parameters within 1-4% of truth</td></tr>
+<tr><td>lognormal / lognormal</td><td>False</td><td>0 (fixed)</td><td>&mdash;</td><td>coefficients recovered within 2-5% of the true (uncorrelated) data-generating values</td></tr>
+</table>
+<div class="note">
+The optimizer (<code>scipy.optimize.minimize</code>) can occasionally propose wild trial parameter
+values during its search &mdash; e.g. an exploding piecewise-Gompertz slope &mdash; which overflow
+into <code>inf</code>/<code>nan</code> and would otherwise crash the bivariate-normal-CDF call or
+corrupt the objective. <code>fit_lillardhaz()</code> guards against this with a
+<code>_BAD_PENALTY</code> finite-penalty wrapper around the log-likelihood (the same pattern used
+in the companion <a href="https://github.com/nobifukuda/splitpopsurv">splitpopsurv</a> package's
+Python port), and defaults to <code>method="L-BFGS-B"</code> rather than plain <code>"BFGS"</code>,
+which was found more reliable for these likelihoods.
+</div>
+</section>
+
+<section id="reference">
+<h2>8. Function reference</h2>
+<div class="formula-block">
+fit_lillardhaz(eq1, eq2, data, y1, y2, d2, d1=None,<br>
+&nbsp;&nbsp;x1=(), x2=(), nodes1=None, nodes2=None, corr=True,<br>
+&nbsp;&nbsp;start=None, method="L-BFGS-B")
+</div>
+<table>
+<tr><th>argument</th><th>meaning</th></tr>
+<tr><td><code>eq1</code></td><td>"probit", "lognormal", or "pgompertz"</td></tr>
+<tr><td><code>eq2</code></td><td>"lognormal" or "pgompertz"</td></tr>
+<tr><td><code>y1</code>, <code>d1</code></td><td>eq1's outcome/duration and failure-indicator column names (<code>d1</code> ignored if eq1="probit"; <code>y1</code> is then the binary 0/1 column)</td></tr>
+<tr><td><code>y2</code>, <code>d2</code></td><td>eq2's duration and failure-indicator column names</td></tr>
+<tr><td><code>x1</code>, <code>x2</code></td><td>sequences of covariate column names for each location index</td></tr>
+<tr><td><code>nodes1</code>, <code>nodes2</code></td><td>ascending interior nodes; required exactly when the corresponding equation is "pgompertz"</td></tr>
+<tr><td><code>corr</code></td><td><code>False</code> fixes rho=0 and fits independently</td></tr>
+</table>
+<p>
+Returns a <code>LillardhazResult</code> with a <code>.summary()</code>/<code>repr()</code>,
+<code>.params</code>/<code>.se</code> dicts, <code>.rho</code>/<code>.rho_se</code>,
+<code>.loglik</code>, and a <code>.predict(data, kind=...)</code> method accepting
+<code>"surv2"</code> (default), <code>"surv1"</code>, <code>"dens1"</code>, <code>"dens2"</code>,
+<code>"pr1"</code>, <code>"xb1"</code>, <code>"xb2"</code> (the last two mirroring the Stata/R
+companions' predict statistics).
+</p>
+</section>
+
+<section id="examples">
+<h2>9. Examples</h2>
+<pre><code>import numpy as np
+from lillardhaz import fit_lillardhaz
+
+# Probit & log-normal hazard, correlated
+fit = fit_lillardhaz(
+    "probit", "lognormal", data,
+    y1="y1", y2="time2", d2="event2",
+    x1=["x1"], x2=["x2"],
+)
+print(fit)
+fit.rho, fit.rho_se
+
+# Piecewise Gompertz & piecewise Gompertz, correlated, 2 nodes each side
+fit = fit_lillardhaz(
+    "pgompertz", "pgompertz", data,
+    y1="time1", d1="event1", y2="time2", d2="event2",
+    x1=["x1"], x2=["x2"], nodes1=[5], nodes2=[4],
+)
+
+# Same, but independent (nested test of rho = 0)
+fit0 = fit_lillardhaz(
+    "pgompertz", "pgompertz", data,
+    y1="time1", d1="event1", y2="time2", d2="event2",
+    x1=["x1"], x2=["x2"], nodes1=[5], nodes2=[4], corr=False,
+)
+lr_stat = 2 * (fit.loglik - fit0.loglik)   # ~chisq(1) under rho = 0
+
+# Predictions
+fit.predict(data, kind="surv2")
+fit.predict(data, kind="dens2")
+fit.predict(data, kind="xb1")</code></pre>
+</section>
+
+<section id="author">
+<h2>10. Author &amp; references</h2>
+<p>
+Nobutaka Fukuda, Tohoku University &mdash;
+<a href="mailto:nobutaka.fukuda@tohoku.ac.jp">nobutaka.fukuda@tohoku.ac.jp</a>
+</p>
+<p class="sub">
+Lillard, L. A. 1993. Simultaneous equations for hazards: Marriage duration and fertility
+timing. <em>Journal of Econometrics</em> 56(1&ndash;2): 189&ndash;217.
+</p>
+<p class="sub">
+Waite, L. J., and L. A. Lillard. 1991. Children and marital disruption. <em>American Journal of
+Sociology</em> 96(4): 930&ndash;953.
+</p>
+<footer>
+lillardhaz v0.1.0 &middot; MIT License &middot;
+<a href="https://github.com/nobifukuda/lillardhaz-py">github.com/nobifukuda/lillardhaz-py</a>
+</footer>
+</section>
+
+</div>
+</body>
+</html>
