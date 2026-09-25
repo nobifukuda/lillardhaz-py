@@ -196,6 +196,18 @@ integration at any stage. This is implemented once, for a general number of segm
 direct vectorized (numpy) port of the same recursion used in the R and Stata companion packages.
 </p>
 <div class="note">
+<strong>nodes1/nodes2 are literal duration time values you choose, not a segment count.</strong>
+Each entry is the actual time point where the hazard's slope is allowed to change &mdash; there is
+no auto-spacing, equal-interval, or quantile-based placement. <em>K</em> is simply derived from how
+many values you list (listing 3 nodes gives 4 segments; 1 node gives 2). For example, to place
+breakpoints at t=2, t=6, and t=15 (4 segments):
+<pre><code>fit = fit_lillardhaz(
+    "pgompertz", "pgompertz", data,
+    y1="time1", d1="event1", y2="time2", d2="event2",
+    x1=["x1"], x2=["x2"], nodes1=[2, 6, 15], nodes2=[4],
+)</code></pre>
+</div>
+<div class="note">
 A piecewise Gompertz segment with a <em>negative</em> slope has a hazard that decays toward 0, so
 its cumulative hazard is <em>bounded</em> as t &rarr; &infin; within that segment &mdash; the
 model is then a genuinely defective distribution (S(&infin;) &gt; 0), the same way a Gompertz
